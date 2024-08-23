@@ -49,8 +49,9 @@ column_names = [
 
 ```
 ## Analisis exploratorio
+
 ![EDA](output.png)
-No hay presencia de atipicos
+Se evidencia que no hay presencia de atipicos
 
 Distribución Normal:
 
@@ -64,7 +65,10 @@ Densidad y Variabilidad:
 Las características como Flavanoids y OD280/OD315_of_diluted_wines muestran una distribución más amplia, lo que indica una mayor variabilidad entre los valores medidos.
 La característica Ash muestra una menor variabilidad con valores concentrados en un rango estrecho.
 
-Entrenamiento de los Modelos
+La variable objetivo se encuentra un poco desbalanceada para la clase 3.
+![clases](clases.png)
+
+## Entrenamiento de los Modelos
 Se prueba un modelo Random Forest y una regresion logistica donde se realiza optimizacion de hiperarametros
 ```bash
 from pyspark.sql import SparkSession
@@ -154,5 +158,5 @@ Una vez se cargaron los modelos se realiza comparacion de las metricas en mlflow
 ![comparacion de los dos modelos](comparacion.png)
 
 ## Conclusiones
-El modelo que mostro mejor performance fue la regresion logistica con un f1score de 0.9754301075268816
+El modelo que mostro mejor performance fue la regresion logistica con un f1score de 0.975430107526881
 Todo el código se desarrolló en PySpark para tener una solución escalable y eficiente para el procesamiento de grandes volúmenes de datos
