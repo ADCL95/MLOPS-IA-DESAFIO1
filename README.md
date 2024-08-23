@@ -48,5 +48,69 @@ column_names = [
 ]
 
 ```
+## Analisis exploratorio
+![EDA](output.png)
+No hay presencia de atipicos
 
+### Distribución Normal:
+
+Varias de las características, como Alcohol, Ash, Total_phenols, y Proanthocyanins, parecen seguir una distribución aproximadamente normal, aunque con diferentes grados de asimetría y kurtosis.
+
+### Sesgo en la Distribución:
+Características como Malic_acid y Nonflavanoid_phenols muestran un sesgo a la derecha, lo que indica que la mayoría de los valores están concentrados en la parte inferior del rango.
+Por otro lado, Color_intensity muestra un sesgo hacia la izquierda, con más valores concentrados en la parte superior del rango.
+
+### Densidad y Variabilidad:
+Las características como Flavanoids y OD280/OD315_of_diluted_wines muestran una distribución más amplia, lo que indica una mayor variabilidad entre los valores medidos.
+La característica Ash muestra una menor variabilidad con valores concentrados en un rango estrecho.
+
+## Modelado
+Se prueba un modelo Random Forest y una regresion logistica donde se realiza optimizacion de hiperarametros
+```bash
+from pyspark.sql import SparkSession
+from pyspark.ml.feature import VectorAssembler
+from pyspark.ml.classification import RandomForestClassifier, LogisticRegression
+from pyspark.ml.tuning import CrossValidator, ParamGridBuilder
+from pyspark.ml.evaluation import MulticlassClassificationEvaluator
+import mlflow
+import mlflow.spark
+
+
+# Evaluador para F1 Score
+evaluator = MulticlassClassificationEvaluator(labelCol="Class", predictionCol="prediction", metricName="f1")
+
+# Random Forest
+rf = RandomForestClassifier(labelCol="Class", featuresCol="features")
+rf_param_grid = (ParamGridBuilder()
+                 .addGrid(rf.numTrees, [10, 50])
+                 .addGrid(rf.maxDepth, [5, 10])
+                 .build())
+cv_rf = CrossValidator(estimator=rf,
+                       estimatorParamMaps=rf_param_grid,
+                       evaluator=evaluator,
+                       numFolds=5)
+
+# Regresión Logística
+lr = LogisticRegression(labelCol="Class", featuresCol="features", maxIter=10)
+lr_param_grid = (ParamGridBuilder()
+                 .addGrid(lr.regParam, [0.1, 0.01])
+                 .addGrid(lr.elasticNetParam, [0.8, 0.5])
+                 .build())
+cv_lr = CrossValidator(estimator=lr,
+                       estimatorParamMaps=lr_param_grid,
+                       evaluator=evaluator,
+                       numFolds=5)
+
+
+
+# Ajustar modelos
+cv_rf_model = cv_rf.fit(train_df)
+cv_lr_model = cv_lr.fit(train_df)
+
+# Evaluar modelos
+def evaluate_model(model, test_df):
+    predictions = model.transform(test_df)
+    f1_score = evaluator.evaluate(predictions)
+    return f1_score
+```
 
